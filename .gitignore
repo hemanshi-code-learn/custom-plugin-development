@@ -1,0 +1,7 @@
+# Ignore common development/build folders
+/node_modules
+/vendor
+
+# Ignore WordPress temporary files (e.g., if you're testing inside the plugin directory)
+*.log
+*.tmp
