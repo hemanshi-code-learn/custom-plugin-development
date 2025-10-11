@@ -48,6 +48,6 @@ register_deactivation_hook(__FILE__, 'macf_deactivate_plugin')
 /**
  * Initialize the core plugin class instance.
  */
-// OOP_Contact_Form::get_instance();
+//MA_Contact_Form::get_instance();
 
 ?>
