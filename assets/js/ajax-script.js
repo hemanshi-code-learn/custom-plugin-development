@@ -2,7 +2,8 @@ jQuery(document).ready(function($){
     $('#ma-contact-form').on('submit', function(e){
         e.preventDefault();
 
-        var formData = ($this).serializeArray();
+        
+        var formData = $(this).serializeArray(); 
 
         formData.push({
             name:'action',
@@ -21,12 +22,14 @@ jQuery(document).ready(function($){
                     $responseDiv.html(response.data.message).removeClass('sending error').addClass('success');
                     $('#ma-contact-form')[0].reset();
                 } else {
-                    $responseDiv.html(response.data.message).removeClass(sending success').addClass('error');
+                    
+                    $responseDiv.html(response.data.message).removeClass('sending success').addClass('error'); 
                 }
             },
-            error: function({
+            
+            error: function(){ 
                 $responseDiv.html('An unexpected error occurred.').removeClass('sending success').addClass('error');
-            })
+            }
         });
     });
 });

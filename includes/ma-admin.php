@@ -97,6 +97,14 @@ class Contact_Form_Admin{
         );
 
         add_settings_field(
+            'macf_email_field', // New ID for email field
+            'Notification Email',
+            [$this, 'render_email_field'],
+            'ma-cf-settings',
+            'macf_general_section'
+        );
+
+        add_settings_field(
             'macf_delete_data_field',
             'Delete Data on Deactivation',
             [$this, 'render_delete_data_field'],
@@ -112,7 +120,7 @@ class Contact_Form_Admin{
 
     public function render_email_field(){
         $email = get_option('macf_notification_email', get_bloginfo('admin_email'));
-        echo '<input type="email" name="macf_notification_email" value=" ' . esc_attr($email) . '"  class="regular-text">';
+        echo '<input type="email" name="macf_notification_email" value="' . esc_attr($email) . '" class="regular-text">'; 
         echo '<p class="description">Email address to receive new submission alerts.</p>';
     }
 
@@ -123,9 +131,8 @@ class Contact_Form_Admin{
 
      public function render_delete_data_field(){
         $checked = get_option('macf_delete_data_on_deactivation');
-        $is_checked = ($checked === 'yes') ? 'checked= "checked"' : '';
-        echo '<label><input type=checkbox" name= "macf_delete_data_on_deactivation" value="yes" ' . $is_checked . '/>Yes, delete all submission data when the plugin is deactivated.</label>';
-
+        $is_checked = ($checked === 'yes') ? 'checked="checked"' : ''; 
+        echo '<label><input type="checkbox" name="macf_delete_data_on_deactivation" value="yes" ' . $is_checked . '/>Yes, delete all submission data when the plugin is deactivated.</label>';
      }
 
 

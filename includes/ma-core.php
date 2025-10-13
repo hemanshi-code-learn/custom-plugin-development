@@ -11,7 +11,7 @@ class MA_Contact_Form{
 
 
     // Frontend Hooks
-    add_action('wp_enqueue_scrips', [$this, 'enqueue_assets']);
+    add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
     add_action('init', [$this, 'register_shortcode']);
 
 
