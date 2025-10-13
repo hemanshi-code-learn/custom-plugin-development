@@ -85,7 +85,7 @@ class Contact_Form_Admin{
 
      public function register_settings(){
         // Register the setting (notification email)
-        register_setting('macf_settings_group', 'mac_notification_email', ['sanitize_callback' => 'sanitize_email']);
+        register_setting('macf_settings_group', 'macf_notification_email', ['sanitize_callback' => 'sanitize_email']);
         // Register the setting (delete data option)
         register_setting('macf_settings_group', 'macf_delete_data_on_deactivation');
 

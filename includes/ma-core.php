@@ -46,20 +46,52 @@ class MA_Contact_Form{
    public function render_contact_form($atts){
     ob_start();
     ?>
+    <style>
+        .macf-error {
+            color: red;
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .macf-field-wrap {
+            margin-bottom: 15px;
+        }
+    </style>
     <div class="ma-contact-form-wrap">
-            <form id="ma-contact-form" method="post">
-                <?php wp_nonce_field('ma_contact_form_nonce_action', 'ma_contact_form_nonce_field'); ?>
+        <form id="ma-contact-form" method="post">
+            <?php wp_nonce_field('ma_contact_form_nonce_action', 'ma_contact_form_nonce_field'); ?>
 
-                <input type="text" name="cf_firstname" placeholder="First Name *" required>
-                <input type="text" name="cf_lastname" placeholder="Last Name (Optional)">
-                <input type="email" name="cf_email" placeholder="Email Address *" required>
-                <input type="text" name="cf_phone" placeholder="Phone (Optional)">
-                <textarea name="cf_message" placeholder="Your Message *" rows="5" required></textarea>
-                <button type="submit">Send Message</button>
+            <div class="macf-field-wrap">
+                <input type="text" name="cf_firstname" id="cf_firstname" placeholder="First Name *" required>
+                <span class="macf-error" id="error-cf_firstname"></span>
+            </div>
 
-                <div id="ma-form-response" aria-live="polite"></div>
-            </form>
-        </div>
+            <div class="macf-field-wrap">
+                <input type="text" name="cf_lastname" id="cf_lastname" placeholder="Last Name (Optional)">
+                <span class="macf-error" id="error-cf_lastname"></span>
+            </div>
+            
+            <div class="macf-field-wrap">
+                <input type="email" name="cf_email" id="cf_email" placeholder="Email Address *" required>
+                <span class="macf-error" id="error-cf_email"></span>
+            </div>
+            
+            <div class="macf-field-wrap">
+                <input type="text" name="cf_phone" id="cf_phone" placeholder="Phone (10 digits, Optional)">
+                <span class="macf-error" id="error-cf_phone"></span>
+            </div>
+            
+            <div class="macf-field-wrap">
+                <textarea name="cf_message" id="cf_message" placeholder="Your Message (Max 500 chars) *" rows="5" required></textarea>
+                <span class="macf-error" id="error-cf_message"></span>
+            </div>
+
+            <button type="submit">Send Message</button>
+
+            <div id="ma-form-response" aria-live="polite"></div>
+        </form>
+    </div>
     <?php 
     return ob_get_clean();
    }
@@ -72,8 +104,21 @@ class MA_Contact_Form{
     }
 
     $validated_data = $this->validate_and_sanitize($_POST);
+    
+    // Check if validation failed (is a WP_Error object)
     if(is_wp_error($validated_data)){
-        wp_send_json_error(['message' => $validated_data->get_error_message()]);
+        // Extract all errors into an array where keys are the field IDs/codes
+        $field_errors = [];
+        foreach ($validated_data->get_error_codes() as $code) {
+             // Use the code (which we set to be the field name) as the key
+             $field_errors[$code] = $validated_data->get_error_message($code);
+        }
+
+        // Send a structured error response for JavaScript to parse
+        wp_send_json_error([
+            'errors' => $field_errors,
+            'type' => 'validation_errors'
+        ]);
         wp_die();
     }
 
@@ -86,7 +131,7 @@ class MA_Contact_Form{
     wp_send_json_error(['message' => 'A database error occurred. Please try again.']);
    }  
    wp_die();
-   }
+}
 
 //    private function validate_and_sanitize($data){
 //     // Sanitize all inputs
@@ -111,13 +156,11 @@ class MA_Contact_Form{
 private function validate_and_sanitize($data){
     // --- Configuration ---
     $max_message_length = 500;
-    $strict_phone_regex = '/^\d{10}$/'; 
-
+    
     // Initialize the WP_Error object
     $errors = new WP_Error();
 
     // Get the database instance for duplicate checks
-    // NOTE: Replace 'Contact_Form_DB' with the actual class name if different
     $db = Contact_Form_DB::get_instance(); 
 
     // --- 1. Sanitize all inputs ---
@@ -133,46 +176,43 @@ private function validate_and_sanitize($data){
 
     // A. Check for REQUIRED Fields
     if(empty($fields['cf_firstname'])){
-        $errors->add('firstname_required', 'First Name is a required field.');
+        $errors->add('cf_firstname', 'First Name is required.');
     }
     if(empty($fields['cf_email'])){
-        $errors->add('email_required', 'Email is a required field.');
+        $errors->add('cf_email', 'Email Address is required.');
     }
     if(empty($fields['cf_message'])){
-        $errors->add('message_required', 'Message is a required field.');
+        $errors->add('cf_message', 'Message is required.');
     }
-
-    // Return required errors immediately before proceeding to data-specific checks
-    if (!empty($errors->get_error_codes())) {
-        return $errors;
-    }
-
-    // B. Email Format and Duplication Validation (ALWAYS REQUIRED)
-    if(!is_email($fields['cf_email'])){
-        $errors->add('invalid_email', 'Please enter a valid email address, e.g., name@example.com.');
-    } 
-    // Run duplicate check only if email format is initially valid
-    else if ($db->is_email_duplicate($fields['cf_email'])) {
-        $errors->add('duplicate_email', 'This email address has already submitted a form.');
+    
+    // B. Email Format and Duplication Validation
+    if(!empty($fields['cf_email'])) {
+        if(!is_email($fields['cf_email'])){
+            $errors->add('cf_email', 'Please enter a valid email address (e.g., user@domain.com).');
+        } 
+        // Run duplicate check only if email format is initially valid
+        else if ($db->is_email_duplicate($fields['cf_email'])) {
+            $errors->add('cf_email', 'This email address has already been used for a submission.');
+        }
     }
 
 
     // C. Phone Number Validation (OPTIONAL but strict if entered)
     if (!empty($fields['cf_phone'])) {
-        // 1. Clean the input to remove symbols
+        // 1. Clean the input to remove all non-digits
         $clean_phone = preg_replace('/[^\d]/', '', $fields['cf_phone']);
 
         // 2. Check the cleaned string against the 10-digit requirement
-        if (!preg_match($strict_phone_regex, $clean_phone)) {
-            $errors->add('invalid_phone', 'The phone number must contain exactly 10 digits.');
+        if (strlen($clean_phone) !== 10) {
+            $errors->add('cf_phone', 'The phone number must contain exactly 10 digits.');
         } 
         // 3. Check for Duplication (using the standardized 10-digit format)
         else if ($db->is_phone_duplicate($clean_phone)) {
-            $errors->add('duplicate_phone', 'This phone number has already submitted a form.');
+            $errors->add('cf_phone', 'This phone number has already been used for a submission.');
         }
         
         // 4. Update the field to the cleaned, standardized number for saving
-        if (!$errors->get_error_codes('invalid_phone') && !$errors->get_error_codes('duplicate_phone')) {
+        if (!$errors->get_error_codes('cf_phone')) {
              $fields['cf_phone'] = $clean_phone; 
         }
     }
@@ -182,11 +222,10 @@ private function validate_and_sanitize($data){
 
     if($message_length > $max_message_length){
         $error_message = sprintf(
-            'Your message is too long. Maximum allowed is %d characters, but you used %d.',
-            $max_message_length,
-            $message_length
+            'Your message is too long. Maximum allowed is %d characters.',
+            $max_message_length
         );
-        $errors->add('message_too_long', $error_message);
+        $errors->add('cf_message', $error_message);
     }
 
     // --- 3. Final Return ---
