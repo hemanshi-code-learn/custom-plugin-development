@@ -88,8 +88,39 @@ class MA_Contact_Form{
    wp_die();
    }
 
-   private function validate_and_sanitize($data){
-    // Sanitize all inputs
+//    private function validate_and_sanitize($data){
+//     // Sanitize all inputs
+//     $fields = [
+//         'cf_firstname' => sanitize_text_field( $data['cf_firstname'] ?? '' ),
+//         'cf_lastname'  => sanitize_text_field( $data['cf_lastname'] ?? '' ),
+//         'cf_email'     => sanitize_email( $data['cf_email'] ?? '' ),
+//         'cf_phone'     => sanitize_text_field( $data['cf_phone'] ?? '' ),
+//         'cf_message'   => sanitize_textarea_field( $data['cf_message'] ?? '' ),
+//     ];
+
+//     // Validation Checks
+//     if(empty($fields['cf_firstname']) || empty($fields['cf_email']) || empty($fields['cf_message'])){
+//         return new WP_Error('required_fields', 'Please fill in all required fields.');
+//     }
+//     if(!is_email($fields['cf_email'])){
+//         return new WP_Error('invalid_email', 'Please enter a valid email address.');
+//     }
+//     return $fields;
+//    }
+
+private function validate_and_sanitize($data){
+    // --- Configuration ---
+    $max_message_length = 500;
+    $strict_phone_regex = '/^\d{10}$/'; 
+
+    // Initialize the WP_Error object
+    $errors = new WP_Error();
+
+    // Get the database instance for duplicate checks
+    // NOTE: Replace 'Contact_Form_DB' with the actual class name if different
+    $db = Contact_Form_DB::get_instance(); 
+
+    // --- 1. Sanitize all inputs ---
     $fields = [
         'cf_firstname' => sanitize_text_field( $data['cf_firstname'] ?? '' ),
         'cf_lastname'  => sanitize_text_field( $data['cf_lastname'] ?? '' ),
@@ -98,15 +129,75 @@ class MA_Contact_Form{
         'cf_message'   => sanitize_textarea_field( $data['cf_message'] ?? '' ),
     ];
 
-    // Validation Checks
-    if(empty($fields['cf_firstname']) || empty($fields['cf_email']) || empty($fields['cf_message'])){
-        return new WP_Error('required_fields', 'Please fill in all required fields.');
+    // --- 2. Validation Checks ---
+
+    // A. Check for REQUIRED Fields
+    if(empty($fields['cf_firstname'])){
+        $errors->add('firstname_required', 'First Name is a required field.');
     }
+    if(empty($fields['cf_email'])){
+        $errors->add('email_required', 'Email is a required field.');
+    }
+    if(empty($fields['cf_message'])){
+        $errors->add('message_required', 'Message is a required field.');
+    }
+
+    // Return required errors immediately before proceeding to data-specific checks
+    if (!empty($errors->get_error_codes())) {
+        return $errors;
+    }
+
+    // B. Email Format and Duplication Validation (ALWAYS REQUIRED)
     if(!is_email($fields['cf_email'])){
-        return new WP_Error('invalid_email', 'Please enter a valid email address.');
+        $errors->add('invalid_email', 'Please enter a valid email address, e.g., name@example.com.');
+    } 
+    // Run duplicate check only if email format is initially valid
+    else if ($db->is_email_duplicate($fields['cf_email'])) {
+        $errors->add('duplicate_email', 'This email address has already submitted a form.');
     }
+
+
+    // C. Phone Number Validation (OPTIONAL but strict if entered)
+    if (!empty($fields['cf_phone'])) {
+        // 1. Clean the input to remove symbols
+        $clean_phone = preg_replace('/[^\d]/', '', $fields['cf_phone']);
+
+        // 2. Check the cleaned string against the 10-digit requirement
+        if (!preg_match($strict_phone_regex, $clean_phone)) {
+            $errors->add('invalid_phone', 'The phone number must contain exactly 10 digits.');
+        } 
+        // 3. Check for Duplication (using the standardized 10-digit format)
+        else if ($db->is_phone_duplicate($clean_phone)) {
+            $errors->add('duplicate_phone', 'This phone number has already submitted a form.');
+        }
+        
+        // 4. Update the field to the cleaned, standardized number for saving
+        if (!$errors->get_error_codes('invalid_phone') && !$errors->get_error_codes('duplicate_phone')) {
+             $fields['cf_phone'] = $clean_phone; 
+        }
+    }
+
+    // D. Message Character Limit
+    $message_length = function_exists('mb_strlen') ? mb_strlen($fields['cf_message']) : strlen($fields['cf_message']);
+
+    if($message_length > $max_message_length){
+        $error_message = sprintf(
+            'Your message is too long. Maximum allowed is %d characters, but you used %d.',
+            $max_message_length,
+            $message_length
+        );
+        $errors->add('message_too_long', $error_message);
+    }
+
+    // --- 3. Final Return ---
+    if ($errors->get_error_codes()) {
+        // Return WP_Error object if any errors occurred
+        return $errors;
+    }
+
+    // Return the sanitized and validated fields array
     return $fields;
-   }
+}
 
    private function send_notification_email($data){
     // Get email from settings, fallback to site admin email

@@ -50,5 +50,5 @@ register_deactivation_hook(__FILE__, 'macf_deactivate_plugin');
  */
 //MA_Contact_Form::get_instance();
 add_action('plugins_loaded', 'MA_Contact_Form::get_instance');
-
+Contact_Form_Admin::get_instance();
 ?>

@@ -85,5 +85,26 @@ class Contact_Form_DB{
         return $wpdb->get_results("SELECT * FROM $this->table_name ORDER BY time DESC", ARRAY_A);
       }
 
+  
+public function is_email_duplicate($email) {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'ma_cf_submissions'; 
+    $count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table_name WHERE email = %s",
+        $email
+    ));
+    return $count > 0;
+}
+
+public function is_phone_duplicate($phone) {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'ma_cf_submissions'; 
+    $count = $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM $table_name WHERE phone = %s",
+        $phone
+    ));
+    return $count > 0;
+}
+
 }
 ?>
