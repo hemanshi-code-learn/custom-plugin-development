@@ -41,7 +41,7 @@ function macf_deactivate_plugin(){
         Contact_Form_DB::get_instance()->delete_table();
     }
 }
-register_deactivation_hook(__FILE__, 'macf_deactivate_plugin')
+register_deactivation_hook(__FILE__, 'macf_deactivate_plugin');
 
 
 
@@ -49,5 +49,6 @@ register_deactivation_hook(__FILE__, 'macf_deactivate_plugin')
  * Initialize the core plugin class instance.
  */
 //MA_Contact_Form::get_instance();
+add_action('plugins_loaded', 'MA_Contact_Form::get_instance');
 
 ?>
