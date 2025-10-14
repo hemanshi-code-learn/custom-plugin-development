@@ -1,4 +1,5 @@
 <?php 
+if ( ! class_exists('Contact_Form_DB') ) {
 
 class Contact_Form_DB{
 
@@ -30,7 +31,7 @@ class Contact_Form_DB{
         global $wpdb;
         $charset_collate = $wpdb->get_charset_collate();
 
-        $sql = "CREATE TABLE $this->table_name(
+        $sql = "CREATE TABLE {$this->table_name}(
                 id mediumint(9) NOT NULL AUTO_INCREMENT,
                 time datetime DEFAULT CURRENT_TIMESTAMP NOT NULL,
                 firstname tinytext NOT NULL,
@@ -51,7 +52,7 @@ class Contact_Form_DB{
 
       public function delete_table(){
         global $wpdb;
-        $wpdb->query("DROP TABLE IF EXISTS $this->table_name");
+        $wpdb->query("DROP TABLE IF EXISTS {$this->table_name}");
       }
 
 
@@ -82,29 +83,30 @@ class Contact_Form_DB{
 
       public function get_all_submissions(){
         global $wpdb;
-        return $wpdb->get_results("SELECT * FROM $this->table_name ORDER BY time DESC", ARRAY_A);
+        return $wpdb->get_results("SELECT * FROM {$this->table_name} ORDER BY time DESC", ARRAY_A);
       }
 
   
 public function is_email_duplicate($email) {
     global $wpdb;
-    $table_name = $wpdb->prefix . 'ma_cf_submissions'; 
+    // $table_name = $wpdb->prefix . 'ma_cf_submissions'; 
     $count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name WHERE email = %s",
+        "SELECT COUNT(*) FROM {$this->table_name} WHERE email = %s",
         $email
     ));
-    return $count > 0;
+    return (int)$count > 0;
 }
 
 public function is_phone_duplicate($phone) {
     global $wpdb;
-    $table_name = $wpdb->prefix . 'ma_cf_submissions'; 
+    // $table_name = $wpdb->prefix . 'ma_cf_submissions'; 
     $count = $wpdb->get_var($wpdb->prepare(
-        "SELECT COUNT(*) FROM $table_name WHERE phone = %s",
+        "SELECT COUNT(*) FROM {$this->table_name} WHERE phone = %s",
         $phone
     ));
-    return $count > 0;
+    return (int)$count > 0;
 }
 
+}
 }
 ?>

@@ -1,5 +1,5 @@
 <?php 
-
+if ( ! class_exists('MA_Contact_Form') ) {
 class MA_Contact_Form{
    private static $instance = null;
    private $db;
@@ -7,9 +7,9 @@ class MA_Contact_Form{
 
    private function __construct(){
     $this->db = Contact_Form_DB::get_instance();
-    $this->plugin_url = plugin_dir_url(dirname(__FILE__)); // For assets
+    $this->plugin_url = plugin_dir_url(__FILE__) . '../'; // For assets
 
-
+    
     // Frontend Hooks
     add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
     add_action('init', [$this, 'register_shortcode']);
@@ -28,14 +28,16 @@ class MA_Contact_Form{
    }
 
    public function enqueue_assets(){
-    wp_enqueue_style('ma-cf-style', $this->plugin_url . 'assets/css/style.css', [],'1.0');
-    wp_enqueue_script('ma-cf-ajax', $this->plugin_url . 'assets/js/ajax-script.js', ['jquery'], '1.0',true);
-
+    wp_enqueue_style('ma-cf-style', CONTACT_FORM_URL . 'assets/css/style.css', [],'1.0');
+    wp_enqueue_script('ma-cf-ajax', CONTACT_FORM_URL . 'assets/js/ajax-script.js', ['jquery'], '1.0',true);
+    
     // Pass essential data to JavaScript
     wp_localize_script('ma-cf-ajax', 'maContactFormAjax', [
         'ajaxurl' => admin_url('admin-ajax.php'),
         'nonce' => wp_create_nonce('ma_contact_form_nonce_action'),
     ]);
+
+    
 
    }
 
@@ -43,94 +45,82 @@ class MA_Contact_Form{
     add_shortcode('ma_contact_form', [$this, 'render_contact_form']);
    }
 
-   public function render_contact_form($atts){
+   public function render_contact_form(){
     ob_start();
-    ?>
-    <style>
-        .macf-error {
-            color: red;
-            font-size: 0.9em;
-            margin-top: -10px;
-            margin-bottom: 10px;
-            display: block;
-        }
-        .macf-field-wrap {
-            margin-bottom: 15px;
-        }
-    </style>
-    <div class="ma-contact-form-wrap">
-        <form id="ma-contact-form" method="post">
-            <?php wp_nonce_field('ma_contact_form_nonce_action', 'ma_contact_form_nonce_field'); ?>
-
-            <div class="macf-field-wrap">
-                <input type="text" name="cf_firstname" id="cf_firstname" placeholder="First Name *" required>
-                <span class="macf-error" id="error-cf_firstname"></span>
+            ?>
+            <div class="ma-contact-form-wrap">
+                <form id="ma-contact-form" method="post" novalidate>
+                    <?php wp_nonce_field('ma_contact_form_nonce_action', 'ma_contact_form_nonce_field'); ?>
+                    <div class="macf-field-wrap">
+                        <input type="text" name="cf_firstname" id="cf_firstname" placeholder="First Name *" required>
+                        <span class="macf-error" id="error-cf_firstname"></span>
+                    </div>
+                    <div class="macf-field-wrap">
+                        <input type="text" name="cf_lastname" id="cf_lastname" placeholder="Last Name (Optional)">
+                        <span class="macf-error" id="error-cf_lastname"></span>
+                    </div>
+                    <div class="macf-field-wrap">
+                        <input type="email" name="cf_email" id="cf_email" placeholder="Email Address *" required>
+                        <span class="macf-error" id="error-cf_email"></span>
+                    </div>
+                    <div class="macf-field-wrap">
+                        <input type="text" name="cf_phone" id="cf_phone" placeholder="Phone (Optional)">
+                        <span class="macf-error" id="error-cf_phone"></span>
+                    </div>
+                    <div class="macf-field-wrap">
+                        <textarea name="cf_message" id="cf_message" placeholder="Your Message *" rows="5" required></textarea>
+                        <span class="macf-error" id="error-cf_message"></span>
+                    </div>
+                    <button type="submit">Send Message</button>
+                    <div id="ma-form-response" aria-live="polite"></div>
+                </form>
             </div>
-
-            <div class="macf-field-wrap">
-                <input type="text" name="cf_lastname" id="cf_lastname" placeholder="Last Name (Optional)">
-                <span class="macf-error" id="error-cf_lastname"></span>
-            </div>
-            
-            <div class="macf-field-wrap">
-                <input type="email" name="cf_email" id="cf_email" placeholder="Email Address *" required>
-                <span class="macf-error" id="error-cf_email"></span>
-            </div>
-            
-            <div class="macf-field-wrap">
-                <input type="text" name="cf_phone" id="cf_phone" placeholder="Phone (10 digits, Optional)">
-                <span class="macf-error" id="error-cf_phone"></span>
-            </div>
-            
-            <div class="macf-field-wrap">
-                <textarea name="cf_message" id="cf_message" placeholder="Your Message (Max 500 chars) *" rows="5" required></textarea>
-                <span class="macf-error" id="error-cf_message"></span>
-            </div>
-
-            <button type="submit">Send Message</button>
-
-            <div id="ma-form-response" aria-live="polite"></div>
-        </form>
-    </div>
-    <?php 
-    return ob_get_clean();
+            <?php
+            return ob_get_clean();
    }
 
    public function ajax_submit_form(){ 
 
-    if(!check_ajax_referer('ma_contact_form_nonce_action', 'ma_contact_form_nonce_field', false)){
-        wp_send_json_error(['message' => 'Security check failed.']);
-        wp_die();
-    }
+   // Check nonce
+   if ( ! isset($_POST['ma_contact_form_nonce_field']) ||
+   ! wp_verify_nonce($_POST['ma_contact_form_nonce_field'], 'ma_contact_form_nonce_action') ) {
+  wp_send_json_error(['message' => 'Security check failed.'], 400);
+}
 
     $validated_data = $this->validate_and_sanitize($_POST);
+
     
     // Check if validation failed (is a WP_Error object)
     if(is_wp_error($validated_data)){
         // Extract all errors into an array where keys are the field IDs/codes
         $field_errors = [];
-        foreach ($validated_data->get_error_codes() as $code) {
+        $codes = $validated_data->get_error_codes();
+        foreach ($codes as $code) {
              // Use the code (which we set to be the field name) as the key
              $field_errors[$code] = $validated_data->get_error_message($code);
         }
 
+        // echo "<pre>";
+        // var_dump($field_errors);
+        // echo "</pre>";
+       
         // Send a structured error response for JavaScript to parse
         wp_send_json_error([
+            'type' => 'validation_errors',
             'errors' => $field_errors,
-            'type' => 'validation_errors'
-        ]);
-        wp_die();
+        ], 200);
     }
 
     $insert_success = $this->db->insert_data($validated_data);
 
-    if($insert_success){
-        $this->send_notification_email($validated_data);
-    wp_send_json_success(['message' => 'Thank you! Your message has been sent successfully.']);
-   } else {
-    wp_send_json_error(['message' => 'A database error occurred. Please try again.']);
-   }  
-   wp_die();
+    if ( $insert_success === false ) {
+        wp_send_json_error(['message' => 'Database insert failed.'], 500);
+    }
+
+    // Send notification email
+    $this->send_notification_email($validated_data);
+
+    wp_send_json_success(['message' => 'Thank you! Your message has been sent successfully.'], 200);
 }
 
 //    private function validate_and_sanitize($data){
@@ -221,11 +211,7 @@ private function validate_and_sanitize($data){
     $message_length = function_exists('mb_strlen') ? mb_strlen($fields['cf_message']) : strlen($fields['cf_message']);
 
     if($message_length > $max_message_length){
-        $error_message = sprintf(
-            'Your message is too long. Maximum allowed is %d characters.',
-            $max_message_length
-        );
-        $errors->add('cf_message', $error_message);
+        $errors->add('cf_message', "Your message is too long. Maximum allowed is $max_message_length characters.");
     }
 
     // --- 3. Final Return ---
@@ -233,6 +219,7 @@ private function validate_and_sanitize($data){
         // Return WP_Error object if any errors occurred
         return $errors;
     }
+    
 
     // Return the sanitized and validated fields array
     return $fields;
@@ -252,5 +239,6 @@ private function validate_and_sanitize($data){
     wp_mail($recipient, $subject, $body);
 }
 
+}
 }
 ?>

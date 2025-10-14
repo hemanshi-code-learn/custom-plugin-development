@@ -1,7 +1,7 @@
 <?php 
 /*
 Plugin Name: MA Contact Form
-Description: A contact form plugin.
+Description: A contact form plugin. Short Code: [ma_contact_form]
 Version: 1.0
 Author: Mervan Agency
 Author URI:
@@ -13,6 +13,8 @@ if(!defined('ABSPATH')){
 
 
 define('CONTACT_FORM_PATH', plugin_dir_path(__FILE__));
+define('CONTACT_FORM_URL', plugin_dir_url(__FILE__));
+
 
 // echo '<pre>';
 // var_dump(CONTACT_FORM_PATH);
@@ -49,6 +51,6 @@ register_deactivation_hook(__FILE__, 'macf_deactivate_plugin');
  * Initialize the core plugin class instance.
  */
 //MA_Contact_Form::get_instance();
-add_action('plugins_loaded', 'MA_Contact_Form::get_instance');
-Contact_Form_Admin::get_instance();
+add_action('plugins_loaded', ['MA_Contact_Form', 'get_instance']);
+add_action('plugins_loaded', ['Contact_Form_Admin', 'get_instance']);
 ?>

@@ -1,4 +1,5 @@
 <?php 
+if ( ! class_exists('Contact_Form_Admin') ) {
 
 class Contact_Form_Admin{
 
@@ -85,9 +86,15 @@ class Contact_Form_Admin{
 
      public function register_settings(){
         // Register the setting (notification email)
-        register_setting('macf_settings_group', 'macf_notification_email', ['sanitize_callback' => 'sanitize_email']);
+        register_setting('macf_settings_group', 'macf_notification_email', [
+            'sanitize_callback' => 'sanitize_email',
+            'default' => get_bloginfo('admin_email'),
+        ]);
         // Register the setting (delete data option)
-        register_setting('macf_settings_group', 'macf_delete_data_on_deactivation');
+        register_setting('macf_settings_group', 'macf_delete_data_on_deactivation', [
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => 'no',
+        ]);
 
         add_settings_section(
             'macf_general_section',
@@ -130,9 +137,9 @@ class Contact_Form_Admin{
      */
 
      public function render_delete_data_field(){
-        $checked = get_option('macf_delete_data_on_deactivation');
-        $is_checked = ($checked === 'yes') ? 'checked="checked"' : ''; 
-        echo '<label><input type="checkbox" name="macf_delete_data_on_deactivation" value="yes" ' . $is_checked . '/>Yes, delete all submission data when the plugin is deactivated.</label>';
+        $opt = get_option('macf_delete_data_on_deactivation');
+        $checked = ($opt === 'yes') ? 'checked="checked"' : ''; 
+        echo '<label><input type="checkbox" name="macf_delete_data_on_deactivation" value="yes" ' . $checked . '/>Yes, delete all submission data when the plugin is deactivated.</label>';
      }
 
 
@@ -154,5 +161,6 @@ class Contact_Form_Admin{
         </div>
         <?php 
     }
+}
 }
 ?>
