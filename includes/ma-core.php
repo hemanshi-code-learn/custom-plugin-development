@@ -11,7 +11,7 @@ class MA_Contact_Form{
 
     
     // Frontend Hooks
-    add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
+    // add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
     add_action('init', [$this, 'register_shortcode']);
 
 
@@ -27,19 +27,19 @@ class MA_Contact_Form{
     return self::$instance;
    }
 
-   public function enqueue_assets(){
-    wp_enqueue_style('ma-cf-style', CONTACT_FORM_URL . 'assets/css/style.css', [],'1.0');
-    wp_enqueue_script('ma-cf-ajax', CONTACT_FORM_URL . 'assets/js/ajax-script.js', ['jquery'], '1.0',true);
+//    public function enqueue_assets(){
+//     wp_enqueue_style('ma-cf-style', CONTACT_FORM_URL . 'assets/css/style.css', [],'1.0');
+//     wp_enqueue_script('ma-cf-ajax', CONTACT_FORM_URL . 'assets/js/ajax-script.js', ['jquery'], '1.0',true);
     
-    // Pass essential data to JavaScript
-    wp_localize_script('ma-cf-ajax', 'maContactFormAjax', [
-        'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('ma_contact_form_nonce_action'),
-    ]);
+//     // Pass essential data to JavaScript
+//     wp_localize_script('ma-cf-ajax', 'maContactFormAjax', [
+//         'ajaxurl' => admin_url('admin-ajax.php'),
+//         'nonce' => wp_create_nonce('ma_contact_form_nonce_action'),
+//     ]);
 
     
 
-   }
+//    }
 
    public function register_shortcode(){
     add_shortcode('ma_contact_form', [$this, 'render_contact_form']);
@@ -92,11 +92,10 @@ class MA_Contact_Form{
     
     // Check if validation failed (is a WP_Error object)
     if(is_wp_error($validated_data)){
-        // Extract all errors into an array where keys are the field IDs/codes
+       
         $field_errors = [];
         $codes = $validated_data->get_error_codes();
         foreach ($codes as $code) {
-             // Use the code (which we set to be the field name) as the key
              $field_errors[$code] = $validated_data->get_error_message($code);
         }
 
@@ -104,7 +103,6 @@ class MA_Contact_Form{
         // var_dump($field_errors);
         // echo "</pre>";
        
-        // Send a structured error response for JavaScript to parse
         wp_send_json_error([
             'type' => 'validation_errors',
             'errors' => $field_errors,
@@ -144,16 +142,14 @@ class MA_Contact_Form{
 //    }
 
 private function validate_and_sanitize($data){
-    // --- Configuration ---
+    
     $max_message_length = 500;
     
-    // Initialize the WP_Error object
     $errors = new WP_Error();
 
-    // Get the database instance for duplicate checks
     $db = Contact_Form_DB::get_instance(); 
 
-    // --- 1. Sanitize all inputs ---
+    // --- Sanitize all inputs ---
     $fields = [
         'cf_firstname' => sanitize_text_field( $data['cf_firstname'] ?? '' ),
         'cf_lastname'  => sanitize_text_field( $data['cf_lastname'] ?? '' ),
@@ -162,9 +158,8 @@ private function validate_and_sanitize($data){
         'cf_message'   => sanitize_textarea_field( $data['cf_message'] ?? '' ),
     ];
 
-    // --- 2. Validation Checks ---
+    // --- Validation Checks ---
 
-    // A. Check for REQUIRED Fields
     if(empty($fields['cf_firstname'])){
         $errors->add('cf_firstname', 'First Name is required.');
     }
@@ -175,7 +170,7 @@ private function validate_and_sanitize($data){
         $errors->add('cf_message', 'Message is required.');
     }
     
-    // B. Email Format and Duplication Validation
+    
     if(!empty($fields['cf_email'])) {
         if(!is_email($fields['cf_email'])){
             $errors->add('cf_email', 'Please enter a valid email address (e.g., user@domain.com).');
@@ -187,46 +182,41 @@ private function validate_and_sanitize($data){
     }
 
 
-    // C. Phone Number Validation (OPTIONAL but strict if entered)
     if (!empty($fields['cf_phone'])) {
-        // 1. Clean the input to remove all non-digits
+       
         $clean_phone = preg_replace('/[^\d]/', '', $fields['cf_phone']);
 
-        // 2. Check the cleaned string against the 10-digit requirement
+        
         if (strlen($clean_phone) !== 10) {
             $errors->add('cf_phone', 'The phone number must contain exactly 10 digits.');
         } 
-        // 3. Check for Duplication (using the standardized 10-digit format)
+        
         else if ($db->is_phone_duplicate($clean_phone)) {
             $errors->add('cf_phone', 'This phone number has already been used for a submission.');
         }
         
-        // 4. Update the field to the cleaned, standardized number for saving
+        
         if (!$errors->get_error_codes('cf_phone')) {
              $fields['cf_phone'] = $clean_phone; 
         }
     }
 
-    // D. Message Character Limit
     $message_length = function_exists('mb_strlen') ? mb_strlen($fields['cf_message']) : strlen($fields['cf_message']);
 
     if($message_length > $max_message_length){
         $errors->add('cf_message', "Your message is too long. Maximum allowed is $max_message_length characters.");
     }
 
-    // --- 3. Final Return ---
+   
     if ($errors->get_error_codes()) {
-        // Return WP_Error object if any errors occurred
         return $errors;
     }
     
-
-    // Return the sanitized and validated fields array
     return $fields;
 }
 
 private function send_notification_email($data){
-    // Get the recipient email from plugin settings, fallback to site admin email
+   
     $recipient = get_option('macf_notification_email', get_bloginfo('admin_email'));
     $subject = 'New Contact Form Submission from ' . get_bloginfo('name');
     
@@ -237,12 +227,12 @@ private function send_notification_email($data){
     $body .= "Message:\n{$data['cf_message']}";
 
 
-    $from_email = get_option('macf_notification_email', get_bloginfo('admin_email')); // Using the Notification Email as the From address is common.
+    $from_email = get_option('macf_notification_email', get_bloginfo('admin_email')); 
     $from_name = 'MA Contact Form Notifier'; 
 
     $headers = [
         "From: {$from_name} <{$from_email}>",
-        "Reply-To: {$data['cf_firstname']} <{$data['cf_email']}>", // Allows reply directly to the user
+        "Reply-To: {$data['cf_firstname']} <{$data['cf_email']}>", 
         "Content-Type: text/plain; charset=UTF-8"
     ];
 

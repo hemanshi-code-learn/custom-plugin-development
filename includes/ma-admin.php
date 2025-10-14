@@ -54,8 +54,18 @@ class Contact_Form_Admin{
         $submissions = $db->get_all_submissions();
 
         if($submissions){
-            echo '<table class= "wp-list-table widefat fixed striped">';
-            echo '<thead><tr><th>ID</th><th>Time</th><th>Name</th><th>Email</th><th>Phone</th><th>Message</th></tr></thead>';
+            // echo '<table class= "wp-list-table widefat fixed striped">';
+            echo '<table class= "header">';
+            echo '<thead>
+                    <tr>   
+                        <th>ID</th>
+                        <th>Time</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Message</th>
+                    </tr>
+                  </thead>';
             echo '<tbody>';
 
             foreach($submissions as $submission){
@@ -104,7 +114,7 @@ class Contact_Form_Admin{
         );
 
         add_settings_field(
-            'macf_email_field', // New ID for email field
+            'macf_email_field', 
             'Notification Email',
             [$this, 'render_email_field'],
             'ma-cf-settings',
