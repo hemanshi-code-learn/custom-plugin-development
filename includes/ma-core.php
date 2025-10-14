@@ -225,8 +225,8 @@ private function validate_and_sanitize($data){
     return $fields;
 }
 
-   private function send_notification_email($data){
-    // Get email from settings, fallback to site admin email
+private function send_notification_email($data){
+    // Get the recipient email from plugin settings, fallback to site admin email
     $recipient = get_option('macf_notification_email', get_bloginfo('admin_email'));
     $subject = 'New Contact Form Submission from ' . get_bloginfo('name');
     
@@ -236,7 +236,18 @@ private function validate_and_sanitize($data){
     $body .= "Phone: {$data['cf_phone']}\n\n";
     $body .= "Message:\n{$data['cf_message']}";
 
-    wp_mail($recipient, $subject, $body);
+
+    $from_email = get_option('macf_notification_email', get_bloginfo('admin_email')); // Using the Notification Email as the From address is common.
+    $from_name = 'MA Contact Form Notifier'; 
+
+    $headers = [
+        "From: {$from_name} <{$from_email}>",
+        "Reply-To: {$data['cf_firstname']} <{$data['cf_email']}>", // Allows reply directly to the user
+        "Content-Type: text/plain; charset=UTF-8"
+    ];
+
+    wp_mail($recipient, $subject, $body, $headers);
+
 }
 
 }
