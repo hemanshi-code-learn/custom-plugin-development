@@ -23,6 +23,10 @@
     grid-column: 1 / 3;
     resize: vertical;
 }
+.macf-field-wrap.text {
+    grid-column: 1 / 3;
+}
+
 
 .ma-contact-form-wrap button[type="submit"] {
     grid-column: 1 / 3;
@@ -34,6 +38,9 @@
     border-radius: 4px;
 }
 
+.ma-contact-form-wrap button[type="submit"]:hover{
+    background-color: #005177;
+}
 /* Response message styling */
 #ma-form-response {
     grid-column: 1 / 3;

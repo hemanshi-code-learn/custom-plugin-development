@@ -67,7 +67,7 @@ class MA_Contact_Form{
                         <input type="text" name="cf_phone" id="cf_phone" placeholder="Phone (Optional)">
                         <span class="macf-error" id="error-cf_phone"></span>
                     </div>
-                    <div class="macf-field-wrap">
+                    <div class="macf-field-wrap text">
                         <textarea name="cf_message" id="cf_message" placeholder="Your Message *" rows="5" required></textarea>
                         <span class="macf-error" id="error-cf_message"></span>
                     </div>

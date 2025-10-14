@@ -1,0 +1,45 @@
+table.macf-submissions{
+    width: 100%;
+    border: 1px solid #c3c4c7;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+    background-color: #fff;
+    border-collapse:collapse;
+    table-layout: fixed;
+    margin: 20px 0;
+}
+
+table.macf-submissions thead{
+    color:#fff;
+    background-color: #0073aa;
+}
+
+table.macf-submissions th{
+    text-align: left;
+    padding: 10px 12px;
+    font-size: 15px;
+    line-height: 1.4em;
+    border-bottom: 1px solid #c3c4c7;
+    cursor:default;
+    word-wrap: break-word;
+}
+
+table.macf-submissions td{
+    padding: 10px 12px;
+    border-bottom: 1px solid #ddd;
+    vertical-align:top;
+    font-size:14px;
+    line-height:1.4em;
+    word-wrap: break-word;
+}
+
+table.macf-submissions tbody tr:nth-child(odd){
+    background-color: #f6f7f7;
+}
+
+table.macf-submissions tbody tr:nth-child(even){
+    background-color: #fff;
+}
+
+table.macf-submissions tbody tr:last-child td{
+    border-bottom: none;
+}

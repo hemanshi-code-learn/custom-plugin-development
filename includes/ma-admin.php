@@ -55,7 +55,7 @@ class Contact_Form_Admin{
 
         if($submissions){
             // echo '<table class= "wp-list-table widefat fixed striped">';
-            echo '<table class= "header">';
+            echo '<table class= "macf-submissions">';
             echo '<thead>
                     <tr>   
                         <th>ID</th>
