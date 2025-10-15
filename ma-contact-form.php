@@ -52,6 +52,22 @@ function enqueue_assets(){
         [], 
         '1.0'
     );
+
+    // Enqueue new admin AJAX script for pagination
+    wp_enqueue_script(
+        'ma-cf-admin-ajax',
+        CONTACT_FORM_URL . 'assets/js/admin-ajax-script.js',
+        ['jquery'],
+        '1.0',
+        true
+    );
+
+    // Pass essential data to admin JavaScript
+    wp_localize_script('ma-cf-admin-ajax', 'macfAdminAjax', [
+        'ajaxurl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('macf_admin_nonce'),
+        'action' => 'ma_get_submissions', 
+        ]);
     
 }
 

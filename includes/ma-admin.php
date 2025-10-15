@@ -4,9 +4,19 @@ if ( ! class_exists('Contact_Form_Admin') ) {
 class Contact_Form_Admin{
 
     private static $instance = null;
+    private $db;
+    private $plugin_url;
+
     private function __construct(){
+
+        $this->db = Contact_Form_DB::get_instance();
+        $this->plugin_url = plugin_dir_url( __FILE__ ) . '../';
+
         add_action('admin_menu', [$this, 'add_admin_menus']);
         add_action('admin_init', [$this, 'register_settings']);
+
+        // AJAX Hook for pagination
+        add_action('wp_ajax_ma_get_submissions', [$this, 'ajax_get_submissions']);
     }
 
     public static function get_instance(){
@@ -49,15 +59,34 @@ class Contact_Form_Admin{
         ?>
        <div class="wrap">
            <h2>Contact Form submissions</h2>
-        <?php 
-        $db = Contact_Form_DB::get_instance();
-        $submissions = $db->get_all_submissions();
+           <div id="macf-submissions-container">
+                <?php $this->render_submissions_table(); // Initial load ?>
+            </div>
+            <div id="macf-loading-indicator" style="display:none; text-align: center; margin-top: 20px;">
+                <p>Loading submissions...</p>
+            </div>
+       </div>
+       <?php 
 
-        if($submissions){
-            // echo '<table class= "wp-list-table widefat fixed striped">';
-            echo '<table class= "macf-submissions">';
+    }
+
+    /**
+     * Renders the submissions table and pagination.
+     */
+    private function render_submissions_table($paged = 1) {
+        
+        $current_page = max(1, absint($paged));
+        $db = Contact_Form_DB::get_instance();
+        $data = $db->get_submission($current_page, 10); // Using 10 per page
+        
+        $submissions = $data['results'];
+        $total_items = $data['total_items'];
+        $total_pages = $data['total_pages'];
+
+        if ($submissions) {
+            echo '<table class="macf-submissions">';
             echo '<thead>
-                    <tr>   
+                    <tr>    
                         <th>ID</th>
                         <th>Time</th>
                         <th>Name</th>
@@ -65,30 +94,66 @@ class Contact_Form_Admin{
                         <th>Phone</th>
                         <th>Message</th>
                     </tr>
-                  </thead>';
+                </thead>';
             echo '<tbody>';
 
-            foreach($submissions as $submission){
+            foreach ($submissions as $submission) {
                 echo '<tr>';
                 echo '<td>' . esc_html($submission['id']) . '</td>';
                 echo '<td>' . esc_html($submission['time']) . '</td>';
-                echo '<td>' . esc_html($submission['firstname']) . ' ' . $submission['lastname'] . '</td>';
+                echo '<td>' . esc_html($submission['firstname']) . ' ' . esc_html($submission['lastname']) . '</td>';
                 echo '<td>' . esc_html($submission['email']) . '</td>';
                 echo '<td>' . esc_html($submission['phone']) . '</td>';
-                echo '<td>' . esc_html(wp_trim_words($submission['message'],15)) . '</td>';
+                echo '<td>' . esc_html(wp_trim_words($submission['message'], 15)) . '</td>';
                 echo '</tr>';
-            }  
+            }   
             echo '</tbody>';
-            echo '</table>'; 
+            echo '</table>';
+
+            // Pagination Links
+            $big = 999999; // need an unlikely integer
+            $paginate_args = [
+                'base' => '%_%', // Placeholder replaced by JavaScript
+                'format' => '?paged=%#%', 
+                'total' => $total_pages,
+                'current' => $current_page,
+                'show_all' => false,
+                'end_size' => 1,
+                'mid_size' => 2,
+                'prev_next' => true,
+                'prev_text' => __('&laquo; Previous'),
+                'next_text' => __('Next &raquo;'),
+                'type' => 'list',
+            ];
+
+            echo '<div class="tablenav"><div class="tablenav-pages">';
+            echo paginate_links($paginate_args);
+            echo '</div></div>';
+
         } else {
             echo '<p>No Submissions found yet.</p>';
         }
-        ?>
-       </div>
-       <?php 
-
     }
 
+    /**
+     * AJAX handler to fetch submissions for a specific page.
+     */
+    public function ajax_get_submissions() {
+        // Security check
+        if ( ! check_ajax_referer( 'macf_admin_nonce', 'nonce', false ) ) {
+            wp_send_json_error( ['message' => 'Security check failed.'], 403 );
+        }
+        
+        // Get the requested page number
+        $paged = isset($_POST['paged']) ? absint($_POST['paged']) : 1;
+
+        // Output the new table content
+        ob_start();
+        $this->render_submissions_table($paged);
+        $html = ob_get_clean();
+
+        wp_send_json_success( ['html' => $html] );
+    }
 
      /**
      * Registers settings and fields for the settings page.

@@ -81,10 +81,43 @@ class Contact_Form_DB{
       * Retrieves all submission data for the admin panel.
       */
 
-      public function get_all_submissions(){
+    //   public function get_all_submissions(){
+    //     global $wpdb;
+    //     return $wpdb->get_results("SELECT * FROM {$this->table_name} ORDER BY time DESC", ARRAY_A);
+    //   }
+
+    public function get_submission($paged = 1, $per_page = 10){
         global $wpdb;
-        return $wpdb->get_results("SELECT * FROM {$this->table_name} ORDER BY time DESC", ARRAY_A);
-      }
+
+        $paged = max(1, absint($paged));
+        $per_page = max(1, absint($per_page));
+
+        $offset = ($paged -1) * $per_page;
+
+        $total_items = $wpdb->get_var("SELECT COUNT(id) FROM {$this->table_name}");
+        $total_items = absint($total_items);
+
+        $results = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM {$this->table_name} ORDER BY time DESC LIMIT %d OFFSET %d",
+                $per_page,
+                $offset
+            ),ARRAY_A
+        );
+
+        return[
+            'results' => $results,
+            'total_items' => $total_items,
+            'per_page' => $per_page,
+            'current_page' => $paged,
+            'total_pages' => ceil($total_items / $per_page),
+        ];
+    }
+
+    public function count_submissions() {
+        global $wpdb;
+        return (int) $wpdb->get_var("SELECT COUNT(id) FROM $this->table_name");
+    }
 
   
 public function is_email_duplicate($email) {
