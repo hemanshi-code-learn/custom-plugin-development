@@ -12,7 +12,7 @@
             $.ajax({
                 url: maContactFormAjax.ajaxurl,
                 method: 'POST',
-                data: formData + '&action=ma_submit_form',
+                data: formData + '&action=' + maContactFormAjax.action,
                 dataType: 'json',
                 beforeSend: function() {
                     $response.text('Sending...').removeClass('error success');

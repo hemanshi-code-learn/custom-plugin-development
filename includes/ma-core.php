@@ -81,11 +81,11 @@ class MA_Contact_Form{
 
    public function ajax_submit_form(){ 
 
-   // Check nonce
-//    if ( ! isset($_POST['ma_contact_form_nonce_field']) ||
-//    ! wp_verify_nonce($_POST['ma_contact_form_nonce_field'], 'my_new_form_action') ) {
-//   wp_send_json_error(['message' => 'Security check failed.'], 400);
-// }
+//    Check nonce
+   if ( ! isset($_POST['ma_contact_form_nonce_field']) ||
+   ! wp_verify_nonce($_POST['ma_contact_form_nonce_field'], 'my_new_form_action') ) {
+  wp_send_json_error(['message' => 'Security check failed.'], 400);
+}
 
     $validated_data = $this->validate_and_sanitize($_POST);
 
