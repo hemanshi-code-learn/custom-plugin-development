@@ -44,3 +44,60 @@ table.macf-submissions tbody tr:last-child td{
     border-bottom: none;
 }
 
+/* Center pagination links */
+.tablenav {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.tablenav-pages ul.page-numbers {
+    display: flex;
+    list-style: none;
+    padding-left: 0;
+    margin: 0 auto;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fff;
+    /* box-shadow: 0 1px 1px rgba(0,0,0,0.04); */
+}
+
+/* Style individual page numbers */
+.tablenav-pages ul.page-numbers li {
+    margin: 0;
+    border-right: 1px solid #ccd0d4;
+}
+
+.tablenav-pages ul.page-numbers li:last-child {
+    border-right: none;
+}
+
+/* Style links */
+.tablenav-pages ul.page-numbers li a,
+.tablenav-pages ul.page-numbers li span {
+    display: block;
+    padding: 8px 14px;
+    color: #0073aa;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.tablenav-pages ul.page-numbers li span.current {
+    background-color: #0073aa;
+    color: #fff;
+}
+
+/* Hover state */
+.tablenav-pages ul.page-numbers li a:hover {
+    background-color: #f1f1f1;
+}
+
+/* Disabled arrows (optional, for better UX) */
+.tablenav-pages ul.page-numbers li span.dots,
+.tablenav-pages ul.page-numbers li span.disabled {
+    color: #999;
+    background-color: #f9f9f9;
+}
+
+
+ 
