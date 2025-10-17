@@ -43,6 +43,15 @@ class Contact_Form_Admin{
 
         add_submenu_page(
             'ma-cf-submissions',
+            'Form Preview',   // Page title
+            'Form',            // Submenu title
+            'manage_options',  // Capability
+            'ma-cf-form',      // Submenu slug
+            [ $this, 'form_preview_page' ]
+        );
+
+        add_submenu_page(
+            'ma-cf-submissions',
             'Form Settings',
             'Settings',
             'manage_options',
@@ -256,6 +265,47 @@ class Contact_Form_Admin{
         </div>
         <?php 
     }
+
+    public function form_preview_page(){
+        ?>
+        <div class="wrap">
+            <h1>Form Preview & Usage</h1>
+            <p>Use this shortcode to display the form anywhere in your posts/pages:</p>
+            <input type="text" readonly value="[ma_contact_form]" id="macf-shortcode-input" />
+            <button class="button" id="macf-copy-button">Copy Shortcode</button>
+    
+            <h2>Live Preview</h2>
+            <!-- <div style="margin-top:20px; padding:20px; border:1px solid #ddd; background:#fff;"> -->
+                
+                <?php
+                // Render the form using your core shortcode function
+                echo do_shortcode('[ma_contact_form]');
+                ?>
+            
+        </div>
+    
+        <script type="text/javascript">
+            (function(){
+                const input = document.getElementById('macf-shortcode-input');
+                const btn = document.getElementById('macf-copy-button');
+                btn.addEventListener('click', function(){
+                    input.select();
+                    document.execCommand('copy');
+                    btn.innerText = 'Copied!';
+                    setTimeout(function(){
+                        btn.innerText = 'Copy Shortcode';
+                    }, 2000);
+                });
+            })();
+        </script>
+        <?php
+    }
+
+
+
+
+
+
 }
 }
 ?>
