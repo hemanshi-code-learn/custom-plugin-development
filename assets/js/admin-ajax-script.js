@@ -47,13 +47,11 @@ jQuery(function($) {
     // Event listener for pagination links
     $(document).on('click', '#macf-submissions-container .tablenav-pages a', function(e) {
         e.preventDefault();
-        
-        var $link = $(this);
-        var url = new URL($link.attr('href'), window.location.href);
-        var paged = url.searchParams.get('paged');
-
+        var paged = $(this).data('page');
         if (paged) {
             loadSubmissions(paged);
         }
     });
+    
+    
 });

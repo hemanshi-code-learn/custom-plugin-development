@@ -77,7 +77,7 @@ class Contact_Form_Admin{
         
         $current_page = max(1, absint($paged));
         $db = Contact_Form_DB::get_instance();
-        $data = $db->get_submission($current_page, 10); // Using 10 per page
+        $data = $db->get_submission($current_page, 4); // Using 10 per page
         
         $submissions = $data['results'];
         $total_items = $data['total_items'];
@@ -113,8 +113,8 @@ class Contact_Form_Admin{
             // Pagination Links
             $big = 999999; // need an unlikely integer
             $paginate_args = [
-                'base' => '%_%', // Placeholder replaced by JavaScript
-                'format' => '?paged=%#%', 
+                'base' => add_query_arg( 'paged', '%#%' ), 
+                'format' => '', 
                 'total' => $total_pages,
                 'current' => $current_page,
                 'show_all' => false,
@@ -126,9 +126,29 @@ class Contact_Form_Admin{
                 'type' => 'list',
             ];
 
-            echo '<div class="tablenav"><div class="tablenav-pages">';
-            echo paginate_links($paginate_args);
-            echo '</div></div>';
+            $pagination_links = paginate_links($paginate_args);
+
+            if ($pagination_links) {
+                $pagination_links = preg_replace_callback(
+                    '/<a[^>]+href=["\']?([^"\'>]+)["\']?[^>]*>(.*?)<\/a>/i',
+                    function ($matches) {
+                        $url = esc_url_raw($matches[1]);
+                        parse_str(parse_url($url, PHP_URL_QUERY), $params);
+                        $paged = isset($params['paged']) ? (int)$params['paged'] : 1;
+                        return str_replace(
+                            '<a',
+                            '<a data-page="' . esc_attr($paged) . '"',
+                            $matches[0]
+                        );
+                    },
+                    $pagination_links
+                );
+
+                echo '<div class="tablenav"><div class="tablenav-pages">';
+                echo $pagination_links;
+                echo '</div></div>';
+            }
+
 
         } else {
             echo '<p>No Submissions found yet.</p>';

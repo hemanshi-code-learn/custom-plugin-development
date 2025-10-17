@@ -31,7 +31,7 @@ function enqueue_assets(){
     // Pass essential data to JavaScript
     wp_localize_script('ma-cf-ajax', 'maContactFormAjax', [
         'ajaxurl' => admin_url('admin-ajax.php'),
-        'nonce' => wp_create_nonce('ma_contact_form_nonce_action'),
+        'nonce' => wp_create_nonce('my_new_form_action'),
         'action' => 'ma_submit_form',
     ]);  
 
