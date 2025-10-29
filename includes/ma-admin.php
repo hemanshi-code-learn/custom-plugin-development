@@ -267,6 +267,12 @@ class Contact_Form_Admin{
     }
 
     public function form_preview_page(){
+        wp_enqueue_style(
+            'ma-cf-style', 
+            CONTACT_FORM_URL . 'assets/css/style.css', 
+            [],
+            '1.0'
+        );
         ?>
         <div class="wrap">
             <h1>Form Preview & Usage</h1>
