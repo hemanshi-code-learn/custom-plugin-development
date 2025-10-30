@@ -302,6 +302,13 @@ class Contact_Form_Admin{
                         btn.innerText = 'Copy Shortcode';
                     }, 2000);
                 });
+
+                const submitBtn = document.querySelector('#ma-contact-form button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.setAttribute('type', 'button'); 
+                    submitBtn.innerText = 'Send Message (DISABLED IN PREVIEW)';
+                    submitBtn.classList.add('macf-preview-disabled');
+                }
             })();
         </script>
         <?php

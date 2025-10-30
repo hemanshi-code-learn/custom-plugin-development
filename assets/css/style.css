@@ -17,6 +17,7 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     box-sizing: border-box;
+    font-size: 15px;
 }
 
 .ma-contact-form-wrap textarea {
@@ -35,6 +36,7 @@
     color: #fff;
     border: none;
     cursor: pointer;
+    font-size: 15px;
     border-radius: 4px;
 }
 
@@ -67,4 +69,39 @@
     margin-top: 4px;
     display: block;
     min-height: 1em;
+}
+
+/* New rule for the disabled button state on the Admin Preview page */
+.ma-contact-form-wrap button.macf-preview-disabled {
+    grid-column: 1 / 3;
+    padding: 10px 20px;
+    background-color: #0073aa;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    border-radius: 4px;
+    opacity: 0.6; 
+    cursor: not-allowed !important;
+}
+
+/* Ensure the hover effect is disabled when the button is in preview mode */
+/* .ma-contact-form-wrap button.macf-preview-disabled:hover {
+    background-color: #0073aa; 
+} */
+
+@media screen and (max-width: 600px) {
+
+    .ma-contact-form-wrap form {
+        grid-template-columns: 1fr; 
+        max-width: 100%; 
+    }
+
+    .macf-field-wrap,
+    .macf-field-wrap.text,
+    .ma-contact-form-wrap textarea,
+    .ma-contact-form-wrap button[type="submit"],
+    #ma-form-response {
+        grid-column: 1 / 2 !important; 
+    }
 }
