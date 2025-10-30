@@ -73,6 +73,15 @@ function enqueue_assets(){
 
 add_action('admin_enqueue_scripts', 'enqueue_admin_assets');
 
+function ma_get_fresh_nonce() {
+    // Generate a fresh nonce for the specific action 'my_new_form_action'
+    $nonce = wp_create_nonce('my_new_form_action');
+    wp_send_json_success(['nonce' => $nonce]);
+    wp_die();
+}
+add_action('wp_ajax_ma_get_fresh_nonce', 'ma_get_fresh_nonce');
+add_action('wp_ajax_nopriv_ma_get_fresh_nonce', 'ma_get_fresh_nonce');
+
 /**
  * Runs on plugin activation(Creates the database table)
  */
